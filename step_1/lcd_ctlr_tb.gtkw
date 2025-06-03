@@ -1,0 +1,34 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Sun Jun  1 00:19:17 2025
+[*]
+[dumpfile] "/Users/sknodl/Repos/learn_verilog/step_1/input_latch_tb.vcd"
+[dumpfile_mtime] "Sun Jun  1 00:13:05 2025"
+[dumpfile_size] 1654
+[savefile] "/Users/sknodl/Repos/learn_verilog/step_1/input_latch_tb.gtkw"
+[timestart] 0
+[size] 1704 997
+[pos] -1 -1
+*-15.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] input_latch_tb.
+[sst_width] 253
+[signals_width] 128
+[sst_expanded] 1
+[sst_vpaned_height] 297
+@28
+input_latch_tb.uut.clk
+input_latch_tb.uut.rs
+input_latch_tb.uut.rw
+@22
+input_latch_tb.uut.datain[7:0]
+@28
+input_latch_tb.uut.start
+input_latch_tb.uut.state[1:0]
+input_latch_tb.uut.rs_out
+input_latch_tb.uut.rw_out
+@29
+input_latch_tb.uut.enable
+@22
+input_latch_tb.uut.dataout[3:0]
+[pattern_trace] 1
+[pattern_trace] 0
