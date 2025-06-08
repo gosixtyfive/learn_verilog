@@ -7,8 +7,8 @@ State machine that will write bytes to a 4 bit LCD controller
 The following commands will compile the verilog and run a simulation.
 
 ```
-iverilog -o lcd_ctrl lcd_ctrl.v lcd_ctrl_tb.v 
-vvp lcd_ctrl
+iverilog -o lcd_ctrl.vvp lcd_ctrl.v lcd_ctrl_tb.v 
+vvp lcd_ctrl.vvp
 ```
 
 Then to display the waveforms run this.  After the first run of GTKWave, you can reload the same file without running this by choosing that option under the "File | Reload waveform" menu option.
@@ -17,7 +17,7 @@ Then to display the waveforms run this.  After the first run of GTKWave, you can
 gtkwave lcd_ctrl_tb.vcd
 ```
 
-The `lcd_ctrl_tb.gtkw` file contains a saved waveform setup.  Read the save file after first opening gtkwave to get the saved waveform list. If the signals in gtkwave are changed and you want to save those changes so they are re-loaded when waveforms are re-loaded, Re-save via the file menu in gtkwave.  You might want to do this so you can view the signals internal to the module under test.
+The `lcd_ctrl_tb.gtkw` file contains a saved waveform setup.  Read the save file after first opening gtkwave to get the saved waveform list and save time resetting the signals after every reload. If the signals in gtkwave are changed and you want to save those changes so they are re-loaded when waveforms are re-loaded, Re-save via the file menu in gtkwave.  You might want to do this so you can view the signals internal to the module under test.
 
 # Current behavior
 
