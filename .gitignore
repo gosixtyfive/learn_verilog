@@ -1,0 +1,44 @@
+# Icarus Verilog build output
+*.vvp
+
+# Waveform outputs
+*.vcd
+*.fst
+
+# Logs
+*.log
+*.out
+*.dump
+
+# Temporary files
+*~
+*.swp
+*.bak
+*.tmp
+
+# VS Code settings
+.vscode/
+
+# GTKWave save files
+#*.gtkw
+
+# ModelSim or QuestaSim (if used)
+transcript
+vsim.wlf
+work/
+
+# Vivado (optional — if FPGA tools are involved)
+*.jou
+*.log
+*.str
+*.cache/
+*.webtalk/
+*.runs/
+*.srcs/
+*.xpr
+*.xgui
+
+# General OS clutter
+.DS_Store
+Thumbs.db
+
