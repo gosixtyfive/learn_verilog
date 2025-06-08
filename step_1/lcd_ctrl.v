@@ -29,15 +29,19 @@ module lcd_ctrl (
             current_state <= IDLE;
             rs_out <= 0;
             rw_out <= 0;
+            current_rs <= 0;
+            current_rw <= 0;
+            current_data <= 0;
+            current_enable <= 0;
             enable <= 0;
             dataout <= 0;
-        end
-        else
+        end else begin
             current_state <= next_state;
             current_rs <= next_rs;
             current_rw <= next_rw;
             current_data <= next_data;
             current_enable <= next_enable;
+        end
     end
 
     always @(*) begin
