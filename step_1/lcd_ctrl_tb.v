@@ -46,10 +46,10 @@ module lcd_ctrl_tb;
         #190 {rst, rs, rw, start, datain} = 12'b0_0_0_0_00000000; // #200
 
         // Write (1) Data (1) register with A0 
-        #100 {rst, rs, rw, start, datain} = 12'b0_1_1_1_10100000;
+        #100 {rst, rs, rw, start, datain} = 12'b0_1_1_1_10100101;
         #100 {rst, rs, rw, start, datain} = 12'b0_x_x_0_xxxxxxxx;
 
-        #800 $finish;
+        #2500 $finish;
     end
 
 endmodule
