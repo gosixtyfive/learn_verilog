@@ -49,7 +49,7 @@ module lcd_ctrl_tb;
         #100 {rst, rs, rw, start, datain} = 12'b0_1_1_1_10100101;
         #100 {rst, rs, rw, start, datain} = 12'b0_x_x_0_xxxxxxxx;
 
-        #2500 $finish;
+        #5000 $finish;
     end
 
 endmodule
