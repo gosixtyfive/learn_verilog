@@ -1,14 +1,15 @@
 module lcd_ctrl (
     input clk,
     input rst,
-    input rs,
-    input rw,
-    input [7:0] datain,
+    input rs_in,
+    input rw_in,
+    input [7:0] data_in,
     input start,
+    output reg ready_out,
     output reg rs_out,
     output reg rw_out,
-    output reg enable, 
-    output reg [3:0] dataout
+    output reg enable_out, 
+    output reg [3:0] data_out
 );
 
     localparam IDLE       = 4'b0000;
@@ -23,17 +24,38 @@ module lcd_ctrl (
     localparam EN_LO_2    = 4'b1001;
     localparam EN_LO_3    = 4'b1010;
     localparam EN_EDGE_LO = 4'b1011;
+    localparam CMD_DLY    = 4'b1100;
 
-    localparam INTER_NIBBLE = 6'b01_1000; // 32 clocks delay between high and low nibble 
+    localparam INTER_NIBBLE_DLY_TEST = 10'd10; // 416ns delay between high and low nibble 
+    localparam INTER_NIBBLE_DLY_PROD = 10'd60; // 5us clocks delay between high and low nibble 
+
+    localparam INTER_NIBBLE_DLY = INTER_NIBBLE_DLY_TEST; // 5us clocks delay between high and low nibble 
+
+    localparam INTER_CMD_DLY_TEST = 10'd40;
+    localparam INTER_CMD_DLY_PROD = 10'd600; // 50us - delay between commands()
+
+    localparam INTER_CMD_DLY = INTER_CMD_DLY_TEST;
     
-    reg [3:0] current_state, next_state;
-    reg current_rs, next_rs;
-    reg current_rw, next_rw;
-    reg current_enable, next_enable;
-    reg [7:0] current_data, next_data;
-    reg [3:0] current_out, next_out;
+    reg [3:0] current_state;
+    reg [3:0] next_state;
 
-    reg [5:0] ticks_end_in;
+    reg latched_rs;
+    reg next_rs;
+
+    reg latched_rw;
+    reg next_rw;
+
+    reg current_enable;
+    reg next_enable;
+
+    reg [7:0] latched_data;
+    reg [7:0] next_data;
+
+    reg [3:0] current_out;
+    reg [3:0] next_out;
+
+    // Interface with state stretch timer
+    reg [9:0] ticks_end_in;
     reg start_timer_in;
     wire timer_done;
 
@@ -48,20 +70,20 @@ module lcd_ctrl (
     always @(posedge clk or posedge rst) begin
         if (rst) begin
             current_state <= IDLE;
+            latched_rs <= 0;
+            latched_rw <= 0;
+            latched_data <= 0;
+            current_enable <= 0;
+            current_out <= 0;
             rs_out <= 0;
             rw_out <= 0;
-            current_rs <= 0;
-            current_rw <= 0;
-            current_data <= 0;
-            current_out <= 0;
-            current_enable <= 0;
-            enable <= 0;
-            dataout <= 0;
+            enable_out <= 0;
+            data_out <= 0;
         end else begin
             current_state <= next_state;
-            current_rs <= next_rs;
-            current_rw <= next_rw;
-            current_data <= next_data;
+            latched_rs <= next_rs;
+            latched_rw <= next_rw;
+            latched_data <= next_data;
             current_enable <= next_enable;
             current_out <= next_out;
         end
@@ -69,74 +91,97 @@ module lcd_ctrl (
 
     always @(*) begin
         case (current_state)
-            IDLE:  next_state = start ? INPUT_LATCH : IDLE;
-            INPUT_LATCH:        next_state = ADX_SETUP_HI;
-            ADX_SETUP_HI:       next_state = EN_HI_1;
-            EN_HI_1:            next_state = EN_HI_2;
-            EN_HI_2:            next_state = EN_HI_3;
-            EN_HI_3:            next_state = EN_EDGE_HI;
-            EN_EDGE_HI:         next_state = timer_done ? ADX_SETUP_LO : EN_EDGE_HI;
-            ADX_SETUP_LO:       next_state = EN_LO_1;
-            EN_LO_1:            next_state = EN_LO_2;
-            EN_LO_2:            next_state = EN_LO_3;
-            EN_LO_3:            next_state = EN_EDGE_LO;
-            EN_EDGE_LO:         next_state = IDLE;
-            default:            next_state = IDLE;
-        endcase
-
-        case (current_state)
-            IDLE:  next_rs = start ? rs : current_rs;
-            default: next_rs = current_rs;
-        endcase
-
-        case (current_state)
-            IDLE:  next_rw = start ? rw : current_rw;
-            default: next_rw = current_rw;
-        endcase 
-
-        case (current_state)
-            ADX_SETUP_HI: next_enable = 1;
-            EN_HI_1: next_enable = 1;
-            EN_HI_2: next_enable = 1;
-            ADX_SETUP_LO: next_enable = 1;
-            EN_LO_1: next_enable = 1;
-            EN_LO_2: next_enable = 1;
-            default: next_enable = 0;
-        endcase
-
-        case (current_state)
-            IDLE:  next_data = start ? datain : current_data;
-            default: next_data = current_data;
-        endcase
-
-        case (current_state)
-            ADX_SETUP_HI: next_out = current_data[7:4];
-            ADX_SETUP_LO: next_out = current_data[3:0];
-            default: next_out = current_out;
-        endcase
-    end
-
-    always @(*) begin
-        rs_out = current_rs;
-        rw_out = current_rw;
-        enable = current_enable;
-        dataout = next_out;
-    end
-
-  always @(*) begin
-        case (current_state)
-            EN_HI_3: 
-            begin
-                start_timer_in = 1;
-                ticks_end_in = INTER_NIBBLE;
+            IDLE:  begin
+                next_state = start ? INPUT_LATCH : IDLE;
+                next_rs = start ? rs_in : 0;
+                next_rw = start ? rw_in : 0;
+                next_data = start ? data_in : 0;
             end
+            INPUT_LATCH: begin
+                next_state = ADX_SETUP_HI;
+            end
+            ADX_SETUP_HI: begin
+                next_state = EN_HI_1;
+            end
+            EN_HI_1: begin
+                next_state = EN_HI_2;
+            end
+            EN_HI_2: begin 
+                next_state = EN_HI_3;
+            end
+            EN_HI_3: begin
+                next_state = EN_EDGE_HI;
+            end
+            EN_EDGE_HI: begin
+                next_state = timer_done ? ADX_SETUP_LO : EN_EDGE_HI;
+            end
+            ADX_SETUP_LO: begin
+                next_state = EN_LO_1;
+            end
+            EN_LO_1: begin
+                next_state = EN_LO_2;
+            end
+            EN_LO_2: begin
+                next_state = EN_LO_3;
+            end
+            EN_LO_3: begin 
+                next_state = EN_EDGE_LO;
+            end
+            EN_EDGE_LO: begin 
+                next_state = CMD_DLY;
+            end
+            CMD_DLY: begin
+                next_state = timer_done ? IDLE : CMD_DLY;
+            end
+            default: begin           
+                next_state = IDLE;
+                next_rs = latched_rs;
+                next_rw = latched_rw;
+                next_data = latched_data;
+            end
+        endcase
+
+        case (next_state)
+            EN_HI_1, EN_HI_2, EN_HI_3: 
+                next_enable = 1;
+            EN_LO_1, EN_LO_2, EN_LO_3: 
+                next_enable = 1;
             default: 
-            begin
+                next_enable = 0;
+        endcase
+
+        case (next_state)
+            ADX_SETUP_HI: 
+                next_out = latched_data[7:4];
+            ADX_SETUP_LO: 
+                next_out = latched_data[3:0];
+            default: 
+                next_out = current_out;
+        endcase
+  
+        case (next_state)
+            EN_EDGE_HI: begin
+                start_timer_in = 1;
+                ticks_end_in = INTER_NIBBLE_DLY;
+            end
+            EN_EDGE_LO: begin
+                start_timer_in = 1;
+                ticks_end_in = INTER_CMD_DLY;
+            end
+            default: begin
                 start_timer_in = 0;
-                ticks_end_in = 6'b000000;
+                ticks_end_in = 0;
             end
         endcase
   end
+
+    always @(*) begin
+        rs_out = latched_rs;
+        rw_out = latched_rw;
+        enable_out = current_enable;
+        data_out = current_out;
+        ready_out = current_state == IDLE;
+    end
 
 endmodule
 
@@ -155,11 +200,11 @@ module timer(
     reg [1:0] timer_state;
     reg [1:0] next_timer_state;
     
-    reg [5:0] current_tick;
-    reg [5:0] next_current_tick;
+    reg [9:0] current_tick;
+    reg [9:0] next_current_tick;
 
-    reg [5:0] expires_tick;
-    reg [5:0] next_expires_tick;
+    reg [9:0] expires_tick;
+    reg [9:0] next_expires_tick;
 
     always @(posedge clk or posedge rst) begin
         if (rst) begin

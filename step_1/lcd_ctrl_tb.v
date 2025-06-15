@@ -12,14 +12,14 @@ module lcd_ctrl_tb;
     lcd_ctrl uut (
         .clk(clk),
         .rst(rst),
-        .rs(rs),
-        .rw(rw),
-        .datain(datain),
+        .rs_in(rs),
+        .rw_in(rw),
+        .data_in(datain),
         .start(start),
         .rs_out(rs_out),
         .rw_out(rw_out),
-        .enable(enable),
-        .dataout(dataout)
+        .enable_out(enable),
+        .data_out(dataout)
     );
 
     // Clock generation: 10ns period
@@ -46,10 +46,10 @@ module lcd_ctrl_tb;
         #190 {rst, rs, rw, start, datain} = 12'b0_0_0_0_00000000; // #200
 
         // Write (1) Data (1) register with A0 
-        #100 {rst, rs, rw, start, datain} = 12'b0_1_1_1_10100101;
+        #100 {rst, rs, rw, start, datain} = 12'b0_1_1_1_00110011;
         #100 {rst, rs, rw, start, datain} = 12'b0_x_x_0_xxxxxxxx;
 
-        #5000 $finish;
+        #10000 $finish;
     end
 
 endmodule
